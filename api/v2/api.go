@@ -116,9 +116,11 @@ func NewAPI(
 
 	openAPI.AlertGetAlertsHandler = alert_ops.GetAlertsHandlerFunc(api.getAlertsHandler)
 	openAPI.AlertPostAlertsHandler = alert_ops.PostAlertsHandlerFunc(api.postAlertsHandler)
+	openAPI.AlertOpenapiPostAlertsHandler = alert_ops.OpenapiPostAlertsHandlerFunc(api.openapiPostAlertsHandler)
 	openAPI.AlertgroupGetAlertGroupsHandler = alertgroup_ops.GetAlertGroupsHandlerFunc(api.getAlertGroupsHandler)
 	openAPI.GeneralGetStatusHandler = general_ops.GetStatusHandlerFunc(api.getStatusHandler)
 	openAPI.ReceiverGetReceiversHandler = receiver_ops.GetReceiversHandlerFunc(api.getReceiversHandler)
+
 	openAPI.SilenceDeleteSilenceHandler = silence_ops.DeleteSilenceHandlerFunc(api.deleteSilenceHandler)
 	openAPI.SilenceGetSilenceHandler = silence_ops.GetSilenceHandlerFunc(api.getSilenceHandler)
 	openAPI.SilenceGetSilencesHandler = silence_ops.GetSilencesHandlerFunc(api.getSilencesHandler)
@@ -281,9 +283,9 @@ func (api *API) getAlertsHandler(params alert_ops.GetAlertsParams) middleware.Re
 	return alert_ops.NewGetAlertsOK().WithPayload(res)
 }
 
-func (api *API) postAlertsHandler(params alert_ops.PostAlertsParams) middleware.Responder {
-	alerts := openAPIAlertsToAlerts(params.Alerts)
+func (api *API) _postAlertsHandler(alerts []*types.Alert) (int, error) {
 	now := time.Now()
+	//TODO
 
 	api.mtx.RLock()
 	resolveTimeout := time.Duration(api.alertmanagerConfig.Global.ResolveTimeout)
@@ -330,14 +332,39 @@ func (api *API) postAlertsHandler(params alert_ops.PostAlertsParams) middleware.
 	}
 	if err := api.alerts.Put(validAlerts...); err != nil {
 		level.Error(api.logger).Log("msg", "failed to create alerts", "err", err)
-		return alert_ops.NewPostAlertsInternalServerError().WithPayload(err.Error())
+		return 400, err
 	}
-
 	if validationErrs.Len() > 0 {
 		level.Error(api.logger).Log("msg", "failed to validate alerts", "err", validationErrs.Error())
-		return alert_ops.NewPostAlertsBadRequest().WithPayload(validationErrs.Error())
+		return 400, validationErrs
 	}
+	return 200, nil
+}
 
+func (api *API) openapiPostAlertsHandler(params alert_ops.OpenapiPostAlertsParams) middleware.Responder {
+	alerts := openAPIAlertsToAlerts(params.Alerts)
+	for _, alert := range alerts {
+		alert.Labels["alert_source"] = prometheus_model.LabelValue(params.TenantID)
+	}
+	statusCode, err := api._postAlertsHandler(alerts)
+	if statusCode == 500 {
+		return alert_ops.NewPostAlertsInternalServerError().WithPayload(err.Error())
+	}
+	if statusCode == 400 {
+		return alert_ops.NewPostAlertsBadRequest().WithPayload(err.Error())
+	}
+	return alert_ops.NewOpenapiPostAlertsOK()
+}
+
+func (api *API) postAlertsHandler(params alert_ops.PostAlertsParams) middleware.Responder {
+	alerts := openAPIAlertsToAlerts(params.Alerts)
+	statusCode, err := api._postAlertsHandler(alerts)
+	if statusCode == 500 {
+		return alert_ops.NewPostAlertsInternalServerError().WithPayload(err.Error())
+	}
+	if statusCode == 400 {
+		return alert_ops.NewPostAlertsBadRequest().WithPayload(err.Error())
+	}
 	return alert_ops.NewPostAlertsOK()
 }
 

@@ -195,6 +195,33 @@ paths:
           $ref: '#/responses/InternalServerError'
         '400':
           $ref: '#/responses/BadRequest'
+  /openapi/{tenantId}/alerts:
+    parameters:
+      - in: path
+        name: tenantId
+        type: string
+        #format: uuid
+        required: true
+        description: ID of the tenant
+    post:
+      tags:
+        - alert
+      operationId: openapiPostAlerts
+      description: Create new Alerts
+      parameters:
+        - in: body
+          name: alerts
+          description: The alerts to create
+          required: true
+          schema:
+            $ref: '#/definitions/postableAlerts'
+      responses:
+        '200':
+          description: Create alerts response
+        '500':
+          $ref: '#/responses/InternalServerError'
+        '400':
+          $ref: '#/responses/BadRequest'
   /alerts/groups:
     get:
       tags:

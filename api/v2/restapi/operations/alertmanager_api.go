@@ -78,6 +78,9 @@ func NewAlertmanagerAPI(spec *loads.Document) *AlertmanagerAPI {
 		GeneralGetStatusHandler: general.GetStatusHandlerFunc(func(params general.GetStatusParams) middleware.Responder {
 			return middleware.NotImplemented("operation GeneralGetStatus has not yet been implemented")
 		}),
+		AlertOpenapiPostAlertsHandler: alert.OpenapiPostAlertsHandlerFunc(func(params alert.OpenapiPostAlertsParams) middleware.Responder {
+			return middleware.NotImplemented("operation AlertOpenapiPostAlerts has not yet been implemented")
+		}),
 		AlertPostAlertsHandler: alert.PostAlertsHandlerFunc(func(params alert.PostAlertsParams) middleware.Responder {
 			return middleware.NotImplemented("operation AlertPostAlerts has not yet been implemented")
 		}),
@@ -129,6 +132,8 @@ type AlertmanagerAPI struct {
 	SilenceGetSilencesHandler silence.GetSilencesHandler
 	// GeneralGetStatusHandler sets the operation handler for the get status operation
 	GeneralGetStatusHandler general.GetStatusHandler
+	// AlertOpenapiPostAlertsHandler sets the operation handler for the openapi post alerts operation
+	AlertOpenapiPostAlertsHandler alert.OpenapiPostAlertsHandler
 	// AlertPostAlertsHandler sets the operation handler for the post alerts operation
 	AlertPostAlertsHandler alert.PostAlertsHandler
 	// SilencePostSilencesHandler sets the operation handler for the post silences operation
@@ -222,6 +227,10 @@ func (o *AlertmanagerAPI) Validate() error {
 
 	if o.GeneralGetStatusHandler == nil {
 		unregistered = append(unregistered, "general.GetStatusHandler")
+	}
+
+	if o.AlertOpenapiPostAlertsHandler == nil {
+		unregistered = append(unregistered, "alert.OpenapiPostAlertsHandler")
 	}
 
 	if o.AlertPostAlertsHandler == nil {
@@ -364,6 +373,11 @@ func (o *AlertmanagerAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/status"] = general.NewGetStatus(o.context, o.GeneralGetStatusHandler)
+
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/openapi/{tenantId}/alerts"] = alert.NewOpenapiPostAlerts(o.context, o.AlertOpenapiPostAlertsHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)

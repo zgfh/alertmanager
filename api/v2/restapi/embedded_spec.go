@@ -209,6 +209,46 @@ func init() {
         }
       }
     },
+    "/openapi/{tenantId}/alerts": {
+      "post": {
+        "description": "Create new Alerts",
+        "tags": [
+          "alert"
+        ],
+        "operationId": "openapiPostAlerts",
+        "parameters": [
+          {
+            "description": "The alerts to create",
+            "name": "alerts",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/postableAlerts"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Create alerts response"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/responses/InternalServerError"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "description": "ID of the tenant",
+          "name": "tenantId",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
     "/receivers": {
       "get": {
         "description": "Get list of all receivers (name of notification integrations)",
@@ -1005,6 +1045,52 @@ func init() {
           }
         }
       }
+    },
+    "/openapi/{tenantId}/alerts": {
+      "post": {
+        "description": "Create new Alerts",
+        "tags": [
+          "alert"
+        ],
+        "operationId": "openapiPostAlerts",
+        "parameters": [
+          {
+            "description": "The alerts to create",
+            "name": "alerts",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/postableAlerts"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Create alerts response"
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "description": "ID of the tenant",
+          "name": "tenantId",
+          "in": "path",
+          "required": true
+        }
+      ]
     },
     "/receivers": {
       "get": {

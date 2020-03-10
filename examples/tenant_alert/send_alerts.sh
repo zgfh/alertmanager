@@ -62,4 +62,6 @@ alerts1='[
      }
   }
 ]'
-curl -v -XPOST -d"$alerts1" -H "Content-Type: application/json"  http://localhost:9093/api/v2/openapi/642D98A2-E7EB-4E2B-81B2-A2953F148E2E/alerts
+curl -v -XPOST -d"$alerts1" -H "Content-Type: application/json"  http://localhost:9093/api/v2/openapi/k8s_test_zone/alerts
+curl -v -XPOST -d"$alerts1" -H "Content-Type: application/json"  http://localhost:9093/api/v2/openapi/k8s_dev_zone/alerts
+curl -v -XPOST -d"$alerts1" -H "Content-Type: application/json"  http://localhost:9093/api/v2/openapi/zabbix_dev_zone/alerts
